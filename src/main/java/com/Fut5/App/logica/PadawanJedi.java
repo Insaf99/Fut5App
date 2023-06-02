@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
-import static com.Fut5.App.Fut5App.equipos;
-
 public class PadawanJedi {
 
     public static void buscarEquipoPorNombreMostrarJugadoresOrdenadosPorNombre(Scanner scanner, List<Equipo> equipos) {
