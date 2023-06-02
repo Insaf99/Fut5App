@@ -1,13 +1,7 @@
 package com.Fut5.App.dominio;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Data
 public class Jugador {
 
@@ -20,6 +14,8 @@ public class Jugador {
     private int cantidadPartidos;
     private boolean esCapitan;
     private int numeroCamiseta;
+
+    private Equipo equipo;
 
     public Jugador(String nombreJugador, String apellidoJugador, double alturaJugador, String posicionJugador,
                    int golesJugador, int partidosJugador, boolean esCapitan, int numeroCamiseta) {

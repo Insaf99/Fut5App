@@ -1,6 +1,6 @@
 package com.Fut5.App;
 
-/*mport com.Fut5.App.dominio.Entrenador;
+import com.Fut5.App.dominio.Entrenador;
 import com.Fut5.App.dominio.Equipo;
 import com.Fut5.App.dominio.Jugador;
 
@@ -11,15 +11,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
+import static com.Fut5.App.logica.PadawanJedi.*;
+
 public class Fut5App {
 
-    private List<Equipo> equipos;
+    private static List<Equipo> equipos;
 
-    public Fut5App(){
+    public Fut5App() {
         this.equipos = new ArrayList<>();
     }
 
-    public void ejecutar() {
+    public static void main(String [] args) {
         Scanner scanner = new Scanner(System.in);
         boolean salir = false;
 
@@ -32,10 +34,11 @@ public class Fut5App {
             System.out.println("5. Eliminar un equipo");
             System.out.println("6. Importar lista de jugadores desde archivo");
             System.out.println("7. Exportar lista de jugadores a archivo");
-            System.out.println("8. Salir");
+            System.out.println("8. Mas opciones");
+            System.out.println("9. Salir");
             System.out.print("Ingrese una opción: ");
             int opcion = scanner.nextInt();
-            scanner.nextLine(); // Consumir el salto de línea
+            scanner.nextLine();
 
             switch (opcion) {
                 case 1:
@@ -60,6 +63,9 @@ public class Fut5App {
                     exportarListaJugadores(scanner);
                     break;
                 case 8:
+                    opcionesJediPadawan(scanner);
+                    break;
+                case 9:
                     salir = true;
                     break;
                 default:
@@ -69,7 +75,7 @@ public class Fut5App {
         }
     }
 
-    private void crearEquipo(Scanner scanner) {
+    private static void crearEquipo(Scanner scanner) {
         System.out.print("Ingrese el nombre del equipo: ");
         String nombreEquipo = scanner.nextLine();
         System.out.print("Ingrese la fecha de creación del equipo: ");
@@ -81,11 +87,19 @@ public class Fut5App {
         String apellidoEntrenador = scanner.nextLine();
         System.out.print("Ingrese la edad del entrenador: ");
         int edadEntrenador = scanner.nextInt();
-        scanner.nextLine(); // Consumir el salto de línea
+        scanner.nextLine();
 
         Entrenador entrenador = new Entrenador(nombreEntrenador, apellidoEntrenador, edadEntrenador);
         Equipo equipo = new Equipo(nombreEquipo, fechaCreacion, entrenador);
 
+        agregarJugadorAEquipo(scanner, equipo);
+        asignarCapitanEquipo(scanner, equipo);
+
+        equipos.add(equipo);
+        System.out.println("Equipo creado exitosamente.");
+    }
+
+    private static void agregarJugadorAEquipo(Scanner scanner, Equipo equipo){
         boolean cargarJugador = true;
         while (cargarJugador) {
             System.out.print("Ingrese el nombre del jugador: ");
@@ -105,25 +119,60 @@ public class Fut5App {
             System.out.print("¿Es capitán el jugador? (S/N): ");
             String opcionCapitan = scanner.next();
             boolean esCapitan = opcionCapitan.equalsIgnoreCase("S");
-            System.out.print("Ingrese el número de camiseta del jugador: ");
-            int numeroCamiseta = scanner.nextInt();
-            scanner.nextLine(); // Consumir el salto de línea
+            boolean numeroCamisetaValido = false;
+            int numeroCamiseta = 0;
+            while (!numeroCamisetaValido) {
+                System.out.print("Ingrese el número de camiseta: ");
+                try {
+                    numeroCamiseta = Integer.parseInt(scanner.nextLine());
+                    // Verificar si el número de camiseta ya está asignado en el equipo
+                    int finalNumeroCamiseta = numeroCamiseta;
+                    boolean numeroCamisetaRepetido = equipo.getJugadores().stream()
+                            .anyMatch(jugador -> jugador.getNumeroCamiseta() == finalNumeroCamiseta);
+                    if (numeroCamisetaRepetido) {
+                        System.out.println("El número de camiseta ya está asignado a otro jugador en el equipo.");
+                    } else {
+                        numeroCamisetaValido = true;
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("El número de camiseta ingresado no es válido. Intente nuevamente.");
+                }
+            }
 
             Jugador jugador = new Jugador(nombreJugador, apellidoJugador, alturaJugador, posicionJugador,
-                    golesJugador, partidosJugador, esCapitan, numeroCamiseta, equipo);
-            equipo.agregarJugador(jugador);
+                    golesJugador, partidosJugador, esCapitan, numeroCamiseta);
             equipo.agregarJugador(jugador);
 
             System.out.print("¿Desea cargar otro jugador? (S/N): ");
             String opcion = scanner.nextLine();
             cargarJugador = opcion.equalsIgnoreCase("S");
         }
-
-        equipos.add(equipo);
-        System.out.println("Equipo creado exitosamente.");
     }
 
-    private void buscarJugadorPorNombre(Scanner scanner) {
+    private static void asignarCapitanEquipo(Scanner scanner, Equipo equipo){
+        System.out.print("Ingrese el número de camiseta del jugador capitán: ");
+        int numeroCamisetaCapitan = Integer.parseInt(scanner.nextLine());
+
+        boolean capitánAsignado = equipo.getJugadores().stream()
+                .anyMatch(jugador -> jugador.isEsCapitan());
+        if (capitánAsignado) {
+            System.out.println("Ya hay un capitán asignado en el equipo. No se puede asignar más de un capitán.");
+            return;
+        }
+
+        Jugador jugadorCapitan = equipo.getJugadores().stream()
+                .filter(jugador -> jugador.getNumeroCamiseta() == numeroCamisetaCapitan)
+                .findFirst().orElse(null);
+
+        if (jugadorCapitan != null) {
+            jugadorCapitan.setEsCapitan(true);
+            System.out.println("Se ha asignado a " + jugadorCapitan.getNombreCompleto() + " como capitán del equipo.");
+        } else {
+            System.out.println("No se encontró ningún jugador con el número de camiseta ingresado.");
+        }
+    }
+
+    private static void buscarJugadorPorNombre(Scanner scanner) {
         System.out.print("Ingrese el nombre del jugador: ");
         String nombreJugador = scanner.nextLine();
 
@@ -147,7 +196,7 @@ public class Fut5App {
         }
     }
 
-    private void buscarEquipoPorNombre(Scanner scanner) {
+    private static void buscarEquipoPorNombre(Scanner scanner) {
         System.out.print("Ingrese el nombre del equipo: ");
         String nombreEquipo = scanner.nextLine();
 
@@ -167,7 +216,7 @@ public class Fut5App {
         }
     }
 
-    private void mostrarJugadoresEquipo(Scanner scanner) {
+    private static void mostrarJugadoresEquipo(Scanner scanner) {
         System.out.print("Ingrese el nombre del equipo: ");
         String nombreEquipo = scanner.nextLine();
 
@@ -190,70 +239,110 @@ public class Fut5App {
         }
     }
 
-    private void eliminarEquipo(Scanner scanner) {
-        System.out.print("Ingrese el nombre del equipo que desea eliminar: ");
+    private static void eliminarEquipo(Scanner scanner) {
+        System.out.print("Ingrese el nombre del equipo a eliminar: ");
         String nombreEquipo = scanner.nextLine();
 
+        Iterator<Equipo> iterator = equipos.iterator();
         boolean encontrado = false;
-        for (Iterator<Equipo> iterator = equipos.iterator(); iterator.hasNext(); ) {
+
+        while (iterator.hasNext()) {
             Equipo equipo = iterator.next();
             if (equipo.getNombre().equalsIgnoreCase(nombreEquipo)) {
                 iterator.remove();
-                System.out.println("Equipo eliminado exitosamente.");
                 encontrado = true;
                 break;
             }
         }
 
-        if (!encontrado) {
+        if (encontrado) {
+            System.out.println("Equipo eliminado correctamente.");
+        } else {
             System.out.println("Equipo no encontrado.");
         }
     }
 
-    private void importarListaJugadores(Scanner scanner) {
-        System.out.print("Ingrese el nombre del archivo (csv o txt) que contiene la lista de jugadores: ");
+    private static void importarListaJugadores(Scanner scanner) {
+        System.out.print("Ingrese el nombre del archivo de importación: ");
         String nombreArchivo = scanner.nextLine();
 
-        try (BufferedReader br = new BufferedReader(new FileReader(nombreArchivo))) {
-            String linea;
-            while ((linea = br.readLine()) != null) {
-                String[] datosJugador = linea.split(",");
-                // Extraer los datos del jugador de cada línea y crear el objeto Jugador
-                // Agregar el jugador al equipo correspondiente
+        try (FileInputStream fis = new FileInputStream(nombreArchivo);
+             ObjectInputStream ois = new ObjectInputStream(fis)) {
+
+            List<Jugador> jugadoresImportados = (List<Jugador>) ois.readObject();
+
+            for (Jugador jugador : jugadoresImportados) {
+                for (Equipo equipo : equipos) {
+                    if (jugador.getEquipo().getNombre().equals(equipo.getNombre())) {
+                        jugador.setEquipo(equipo);
+                        equipo.agregarJugador(jugador);
+                        break;
+                    }
+                }
             }
-            System.out.println("Lista de jugadores importada exitosamente.");
-        } catch (IOException e) {
+
+            System.out.println("Lista de jugadores importada correctamente.");
+
+        } catch (IOException | ClassNotFoundException e) {
             System.out.println("Error al importar la lista de jugadores: " + e.getMessage());
         }
     }
 
-    private void exportarListaJugadores(Scanner scanner) {
-        System.out.print("Ingrese el nombre del archivo de destino (csv o txt) para exportar la lista de jugadores: ");
+    private static void exportarListaJugadores(Scanner scanner) {
+        System.out.print("Ingrese el nombre del archivo de exportación: ");
         String nombreArchivo = scanner.nextLine();
 
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(nombreArchivo))) {
+        try (FileOutputStream fos = new FileOutputStream(nombreArchivo);
+             ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+
+            List<Jugador> jugadoresExportados = new ArrayList<>();
+
             for (Equipo equipo : equipos) {
-                for (Jugador jugador : equipo.getJugadores()) {
-                    String linea = jugador.getNombre() + "," + jugador.getApellido() + "," + jugador.getAltura()
-                            + "," + jugador.getPosicion() + "," + jugador.getCantidadGoles() + "," + jugador.getCantidadPartidos()
-                            + "," + (jugador.isEsCapitan() ? "S" : "N") + "," + jugador.getNumeroCamiseta()
-                            + "," + equipo.getNombre();
-                    bw.write(linea);
-                    bw.newLine();
-                }
+                jugadoresExportados.addAll(equipo.getJugadores());
             }
-            System.out.println("Lista de jugadores exportada exitosamente.");
+
+            oos.writeObject(jugadoresExportados);
+
+            System.out.println("Lista de jugadores exportada correctamente.");
+
         } catch (IOException e) {
             System.out.println("Error al exportar la lista de jugadores: " + e.getMessage());
         }
     }
 
-    // Implementar el resto de los métodos según las funcionalidades requeridas
+    private static void opcionesJediPadawan(Scanner scanner) {
+        boolean salir = false;
+        while (!salir) {
+            System.out.println("----- MENÚ -----");
+            System.out.println("1. Buscar equipo por nombre y mostrar jugadores ordenados por nombre");
+            System.out.println("2. Buscar equipo por nombre y mostrar jugadores ordenados por camiseta");
+            System.out.println("3. Buscar equipo por nombre y mostrar jugadores ordenados por posicion y camiseta");
+            System.out.println("4. Exportar datos de los equipos");
+            System.out.println("5. Salir");
+            System.out.print("Ingrese una opción: ");
+            int opcion = scanner.nextInt();
+            scanner.nextLine();
 
-    public static void main(String[] args) {
-        Fut5App app = new Fut5App();
-        app.ejecutar();
+            switch (opcion) {
+                case 1:
+                    buscarEquipoPorNombreMostrarJugadoresOrdenadosPorNombre(scanner, equipos);
+                    break;
+                case 2:
+                    buscarEquipoPorNombreMostrarJugadoresOrdenadosPorCamiseta(scanner, equipos);
+                    break;
+                case 3:
+                    buscarEquipoPorNombreMostrarJugadoresOrdenadosPorPosicionYCamiseta(scanner, equipos);
+                    break;
+                case 4:
+                    nivelMaestroExportarDatosEquipos(scanner, equipos);
+                    break;
+                case 5:
+                    salir = true;
+                    break;
+                default:
+                    System.out.println("Opción inválida. Intente nuevamente.");
+                    break;
+            }
+        }
     }
-
-
-}*/
+}
